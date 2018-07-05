@@ -3,9 +3,15 @@
 An OTP application to start coding without the boring stuff.
 
 ## Prerequisites
+This project has been written for Mac and Linux environments, theoretically speaking it can run on any environment where a Erlang system is correcty installed, but consider that MS Windows and Erlang are not best buddies. Nowadays it is pretty easy to have Linux systems running in minutes using Virtual Machines, Containers, USB distro or simply double booting your laptop.
 
-The only prerequisite is to have an Erlang/OTP 19.3 system running on your machine. We strongly suggest using [kerl](https://github.com/kerl/kerl) to build and install the proper Erlang version on your system.
-This project has been written for Mac and Linux environments, theoretically speaking it can run on any environment where a Erlang system is correcty installed, but consider that MS Windows and Erlang are not best buddies. Nowadays it is pretty easy to have Linux systems running in minutes using Virtual Machines, Containers, USB distro or simply double booting your laptop: don't waste your time on Windows! :)
+In case you use a Mac system, we strongly recommend using [homebrew](https://brew.sh/) to manage all your packages.
+
+**OpenSSL**
+Check the correct installation process for you environment.
+
+**Erlang/OTP 19.3**
+If you are on Mac, we strongly suggest using [kerl](https://github.com/kerl/kerl) to build and install the proper Erlang version on your system. For other environments you can easily find your installation package on [ErlangSolutions](https://www.erlang-solutions.com/).
 
 ## Build & Run
 
