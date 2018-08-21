@@ -8,9 +8,11 @@ This project has been written for Mac and Linux environments, theoretically spea
 In case you use a Mac system, we strongly recommend using [homebrew](https://brew.sh/) to manage all your packages.
 
 **OpenSSL**
+
 Check the correct installation process for you environment.
 
 **Erlang/OTP 19.3**
+
 If you are on Mac, we strongly suggest using [kerl](https://github.com/kerl/kerl) to build and install the proper Erlang version on your system. For other environments you can easily find your installation package on [ErlangSolutions](https://www.erlang-solutions.com/).
 
 ## Build & Run
