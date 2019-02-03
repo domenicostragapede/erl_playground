@@ -8,7 +8,8 @@
     stdlib,
     lager,
     recon,
-    observer_cli
+    observer_cli,
+    eunit
    ]},
   {env,[]},
   {modules, []}

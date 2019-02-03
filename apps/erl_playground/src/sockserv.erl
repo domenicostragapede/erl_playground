@@ -97,6 +97,10 @@ init(Ref, Socket, Transport, [_ProxyProtocol]) ->
 %% we can use the -behaviour(gen_server) attribute.
 init([]) -> {ok, undefined}.
 
+handle_cast({response, Msg}, State = {ok, #state{socket = Socket, transport = Transport}}) ->
+    send_response(Msg, Transport, Socket),
+    {noreply, State};
+
 handle_cast(Message, State) ->
     _ = lager:notice("unknown handle_cast ~p", [Message]),
     {noreply, State}.
@@ -109,9 +113,9 @@ handle_info({tcp, _Port, Packet}, State = {ok, #state{socket = Socket}}) ->
 
     State = process_packet(Req, State, utils:unix_timestamp()),
     ok = inet:setopts(Socket, [{active, once}]),
-
     {noreply, State};
 handle_info({tcp_closed, _Port}, State) ->
+    State = process_packet(client_disconnected, State, utils:unix_timestamp()),
     {stop, normal, State};
 handle_info(Message, State) ->
     _ = lager:notice("unknown handle_info ~p", [Message]),
@@ -135,10 +139,15 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
 
--spec process_packet(Req :: #req{}, State :: state(), Now :: integer()) -> NewState :: state().
+-spec process_packet(Req :: #req{} | client_disconnected, State :: state(), Now :: integer()) -> NewState :: state().
 process_packet(undefined, State, _Now) ->
     _ = lager:notice("client sent invalid packet, ignoring ~p",[State]),
     State;
+
+process_packet(client_disconnected, State = {ok, #state{socket = Socket}}, _Now) ->
+    call_center_sup:end_call(Socket),
+    State;
+
 process_packet(#req{ type = Type } = Req, State = {ok, #state{socket = Socket, transport = Transport}}, _Now)
     when Type =:= create_session ->
     #req{
@@ -148,13 +157,36 @@ process_packet(#req{ type = Type } = Req, State = {ok, #state{socket = Socket, t
     } = Req,
     _ = lager:info("create_session received from ~p", [UserName]),
 
+    ResponseMsg = call_center_sup:start_call(self(), Socket),
+    send_response(ResponseMsg, Transport, Socket),
+    State;
+
+process_packet(#req{ type = Type } = Req, State = {ok, #state{socket = Socket, transport = Transport}}, _Now)
+    when Type =:= server_message ->
+     #req{
+         server_message_data = #server_message {
+            message = Message
+        }
+    } = Req,
+    ResponseMsg = call_center_sup:process_message(Socket, binary_to_list(Message)),
+    send_response(ResponseMsg, Transport, Socket),
+    State.
+
+-spec send_response(Msg :: string(), Transport:: atom(), Socket :: port()) -> ok.
+send_response(Msg, Transport, Socket) when is_atom(Msg) ->
+    send_response(atom_to_list(Msg), Transport, Socket);
+
+send_response(Msg, _Transport, _Socket) when not is_list(Msg) ->
+    {error, invalid};
+
+send_response(Msg, Transport, Socket) ->
     Response = #req{
         type = server_message,
         server_message_data = #server_message {
-            message = <<"OK">>
+            message = list_to_binary(Msg)
         }
     },
     Data = utils:add_envelope(Response),
     Transport:send(Socket,Data),
+    ok.
 
-    State.

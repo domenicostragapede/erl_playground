@@ -88,4 +88,25 @@ You have two weeks.
 **Good Luck!**
 
 # Candidate comments
-Please add here everythig you need...
+
+##Summary:
+ - Developed all mandatory features;
+ - Extended sockserv module to allow send and receive server_message from protobuf;
+ - Extended node_boot module to start the call_center supervisor after sockserv intialize;
+ - Edit erl_playground.app.src to add eunit library;
+ - Added the optional feature Test, using eunit. Can be launched after run with console option, using `eunit:test(call_center).` command.
+
+## How to use call_center module
+After boot, the supervisor call_center_sup is ready and waiting for request. 
+Using sockclient connect and send_create_session methods, we can start a new call. 
+The server will respond with the available options.
+
+Using send_message method we can send a message to the call center, and get the response.
+
+Using disconnect method the connection will be stopped and the call center process for this user will be terminated.
+
+## Additional Note
+Usage examples are defined into the test module call_center_tests. 
+
+
+

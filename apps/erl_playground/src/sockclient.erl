@@ -9,7 +9,7 @@
 
 -export([start_link/0]). -ignore_xref([{start_link, 4}]).
 -export([connect/0, disconnect/0]).
--export([send_create_session/0]).
+-export([send_create_session/1, send_message/1]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -51,12 +51,20 @@ disconnect() ->
     gen_server:call(whereis(?SERVER), disconnect),
     ok.
 
--spec send_create_session() -> ok.
-send_create_session() ->
+-spec send_create_session(UserName :: string()) -> ok.
+send_create_session(UserName) ->
     CreateSession = #create_session {
-        username = <<"TestUser">>
+        username = list_to_binary(UserName)
     },
     gen_server:cast(whereis(?SERVER), {create_session, CreateSession}).
+
+
+-spec send_message(Msg :: string()) -> ok.
+send_message(Msg) ->
+    ServerMessage = #server_message {
+        message = list_to_binary(Msg)
+    },
+    gen_server:cast(whereis(?SERVER), {server_message, ServerMessage}).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
@@ -79,6 +87,19 @@ handle_cast({create_session, CreateSession}, #state{socket = Socket} = State)
     gen_tcp:send(Socket, Data),
 
     {noreply, State};
+
+handle_cast({server_message, ServerMessage}, #state{socket = Socket} = State)
+    when Socket =/= undefined ->
+    Req = #req {
+        type = server_message,
+        server_message_data = ServerMessage
+    },
+    Data = utils:add_envelope(Req),
+
+    gen_tcp:send(Socket, Data),
+
+    {noreply, State};
+
 handle_cast(Message, State) ->
     _ = lager:warning("No handle_cast for ~p", [Message]),
     {noreply, State}.
@@ -90,7 +111,7 @@ handle_info({tcp, _Port, Packet}, State) ->
     State = process_packet(Req, State, utils:unix_timestamp()),
     {noreply, State};
 handle_info(Message, State) ->
-    _ = lager:warning("No handle_info for~p", [Message]),
+    _ = lager:warning("No handle_info for ~p", [Message]),
     {noreply, State}.
 
 handle_call(connect, _From, State) ->
@@ -132,5 +153,5 @@ process_packet(#req{ type = Type } = Req, State, _Now)
             message = Message
         }
     } = Req,
-    _ = lager:info("server_message received: ~p", [Message]),
+    _ = lager:info("server_message received: ~p", [binary_to_list(Message)]),
     State.
