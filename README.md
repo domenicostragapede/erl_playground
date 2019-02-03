@@ -89,7 +89,7 @@ You have two weeks.
 
 # Candidate comments
 
-##Summary:
+## Summary:
  - Developed all mandatory features;
  - Extended sockserv module to allow send and receive server_message from protobuf;
  - Extended node_boot module to start the call_center supervisor after sockserv intialize;
